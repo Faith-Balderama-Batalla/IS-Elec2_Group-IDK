@@ -8,6 +8,8 @@ $db   = "gown_and_go";
 
 try {
     $conn = mysqli_connect($host, $user, $pass, $db);
+    $conn->query("SET SQL_MODE=''");
+    
     mysqli_set_charset($conn, "utf8mb4");
 } catch (Exception $e) {
     error_log("DB Connection Failed: " . $e->getMessage());

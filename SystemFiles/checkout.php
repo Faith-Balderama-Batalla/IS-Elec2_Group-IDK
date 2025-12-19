@@ -2,6 +2,9 @@
 session_start();
 include 'config.php';
 
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+
+
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'customer') {
     header("Location: login.php");
     exit;
@@ -111,6 +114,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['place_order'])) {
             }
 
             // Payment record
+            if ($order_id <= 0) {
+                throw new Exception("Invalid order ID");
+            }
             $stmt_pay = $conn->prepare("
                 INSERT INTO payments (order_id, payment_method, payment_status, amount)
                 VALUES (?, 'Cash on Delivery', 'Pending', ?)
@@ -132,10 +138,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['place_order'])) {
                 </script>
             ";
 
-        } catch (Exception $e) {
+        } /*catch (Exception $e) {
             $conn->rollback();
             $error = "Something went wrong. Please try again.";
-        }
+        }*/
+            catch (Exception $e) {
+    $conn->rollback();
+    $error = "SQL ERROR: " . $e->getMessage();
+}
+
     }
 }
 ?>
@@ -301,9 +312,10 @@ foreach ($cart as $item_id => $data):
 </table>
 
 <form method="POST">
-    <label><strong>Delivery Address:</strong></label>
-    <textarea name="delivery_address" required></textarea>
-
+    <label>
+        <strong>Delivery Address:</strong>
+        <textarea name="delivery_address" required></textarea>
+    </label>
     <br><br>
     <button type="submit" name="place_order" class="btn">Place Order</button>
     <button type="button" class="btn" style="background:#aaa;" onclick="window.location.href='cart.php'">Cancel</button>
